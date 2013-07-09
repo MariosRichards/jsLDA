@@ -172,28 +172,28 @@ d3.select("#docs-url-input").attr("value", documentsURL);
 d3.select("#stops-url-input").attr("value", stopwordsURL);
 d3.select("#num-topics-input").attr("value", numTopics);
 
-var stopwords = {};
-//  ["the", "and", "of", "for", "in", "a", "on", "is", "an", "this", "to", "by", "abstract", "paper", "based", "with", "or", "are", "from", "upon", "we", "us", "our", "can", "be", "using", "which", "that", "d", "n", "as", "it", "show", "these", "such", "s", "t", "i", "j", "have", "one", "new", "one", "has", "learning", "model", "data", "models", "two", "used", "results"].forEach( function(d) { stopwords[d] = 1; } );
+var stopwords = { "the": 1, "and": 1 , "of" : 1, "for": 1, "in": 1, "a": 1, "on": 1, "is": 1, "an": 1, "this": 1, "to": 1, "by": 1, "abstract": 1, "paper": 1, "based": 1, "with": 1, "or": 1, "are": 1, "from": 1, "upon": 1, "we": 1, "us": 1, "our": 1, "can": 1, "be": 1, "using": 1, "which": 1, "that": 1, "d": 1, "n": 1, "as": 1, "it": 1, "show": 1, "these": 1, "such": 1, "s": 1, "t": 1, "i": 1, "j": 1, "have": 1, "one": 1, "new": 1, "one": 1, "has": 1, "learning": 1, "model": 1, "data": 1, "models": 1, "two": 1, "used": 1, "results": 1 };
+//  ["the" , "and", "of", "for", "in", "a", "on", "is", "an", "this", "to", "by", "abstract", "paper", "based", "with", "or", "are", "from", "upon", "we", "us", "our", "can", "be", "using", "which", "that", "d", "n", "as", "it", "show", "these", "such", "s", "t", "i", "j", "have", "one", "new", "one", "has", "learning", "model", "data", "models", "two", "used", "results"].forEach( function(d) { stopwords[d] = 1; } );
 
-var docSortSmoothing = 10.0;
+var docSortSmoothing    = 10.0;
 var sumDocSortSmoothing = docSortSmoothing * numTopics;
 
-var completeSweeps = 0;
+var completeSweeps      = 0;
 
-var selectedTopic = -1;
+var selectedTopic       = -1;
 
-var wordTopicCounts = {};
-var topicWordCounts = [];
-var tokensPerTopic = [];
-tokensPerTopic.length = numTopics;
+var wordTopicCounts     = {};
+var topicWordCounts     = [];
+var tokensPerTopic      = [];
+tokensPerTopic.length   = numTopics;
 for (var topic = 0; topic < numTopics; topic++) {
   tokensPerTopic[topic] = 0;
 }
 
-var topicWeights = [];
-topicWeights.length = numTopics;
+var topicWeights        = [];
+topicWeights.length     = numTopics;
 
-var documents = [];
+var documents           = [];
 
 /* SVG functions */
 var w = 650,
