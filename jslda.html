@@ -130,6 +130,7 @@ Iterations: <span id="iters">0</span>
 <script>
 
 /** This function is copied from stack overflow: http://stackoverflow.com/users/19068/quentin */
+// ah - how to get which input file/stop word file?
 var QueryString = function () {
   // This function is anonymous, is executed immediately and 
   // the return value is assigned to QueryString!
@@ -153,14 +154,16 @@ var QueryString = function () {
     return query_string;
 } ();
 
-var documentTopicSmoothing = 0.1;
-var topicWordSmoothing = 0.01;
+var documentTopicSmoothing = 0.1; // huh?
+var topicWordSmoothing = 0.01; // huh?
 
 var vocabularySize = 0;
 
 var vocabularyCounts = {};
 
 var numTopics = QueryString.topics ? parseInt(QueryString.topics) : 25;
+
+// input checking
 if (isNaN(numTopics)) {
   alert("The requested number of topics [" + QueryString.topics + "] couldn't be interpreted as a number");
   numTopics = 25;
@@ -175,7 +178,9 @@ d3.select("#num-topics-input").attr("value", numTopics);
 var stopwords = { "the": 1, "and": 1 , "of" : 1, "for": 1, "in": 1, "a": 1, "on": 1, "is": 1, "an": 1, "this": 1, "to": 1, "by": 1, "abstract": 1, "paper": 1, "based": 1, "with": 1, "or": 1, "are": 1, "from": 1, "upon": 1, "we": 1, "us": 1, "our": 1, "can": 1, "be": 1, "using": 1, "which": 1, "that": 1, "d": 1, "n": 1, "as": 1, "it": 1, "show": 1, "these": 1, "such": 1, "s": 1, "t": 1, "i": 1, "j": 1, "have": 1, "one": 1, "new": 1, "one": 1, "has": 1, "learning": 1, "model": 1, "data": 1, "models": 1, "two": 1, "used": 1, "results": 1 };
 //  ["the" , "and", "of", "for", "in", "a", "on", "is", "an", "this", "to", "by", "abstract", "paper", "based", "with", "or", "are", "from", "upon", "we", "us", "our", "can", "be", "using", "which", "that", "d", "n", "as", "it", "show", "these", "such", "s", "t", "i", "j", "have", "one", "new", "one", "has", "learning", "model", "data", "models", "two", "used", "results"].forEach( function(d) { stopwords[d] = 1; } );
 
+//initialising values
 var docSortSmoothing    = 10.0;
+
 var sumDocSortSmoothing = docSortSmoothing * numTopics;
 
 var completeSweeps      = 0;
@@ -183,8 +188,11 @@ var completeSweeps      = 0;
 var selectedTopic       = -1;
 
 var wordTopicCounts     = {};
+
 var topicWordCounts     = [];
+
 var tokensPerTopic      = [];
+
 tokensPerTopic.length   = numTopics;
 for (var topic = 0; topic < numTopics; topic++) {
   tokensPerTopic[topic] = 0;
@@ -195,68 +203,185 @@ topicWeights.length     = numTopics;
 
 var documents           = [];
 
+// to allow tf-idf
+
+var wordIsInXDocs       = {};
+var howManyDocs         = 0;
+var uniqueWordsInDoc    = {};
+
+var stopWords           = [];
+
 /* SVG functions */
+// setting up the d3js correlations/link subpage
 var w = 650,
     h = 400,
     fill = d3.scale.category20();
 
 var vis = d3.select("#corr-page")
-    .append("svg:svg")
-      .attr("width", w)
-      .attr("height", h);
+			.append("svg:svg")
+			.attr("width", w)
+			.attr("height", h);
 
 var linkDistance = 150;
 var correlationCutoff = 0.25;
 
 var truncate = function(s) { return s.length > 300 ? s.substring(0, 299) + "..." : s; }
 
+// tf-idf function
+
+var tfIdf = function()
+{
+	// assemble a tf-idf value for each unique word in each document
+	
+	// with a view to removing them
+	
+	// iterate through all documents
+	
+	// iterate through all unique words
+	
+	//var wordIsInXDocs;
+	
+	for (var doc = 0; doc<howManyDocs; doc++)
+	{
+		for (var uniWord in uniqueWordsInDoc[doc])
+		{
+			//
+			// freq = uniqueWordsInDoc[uniWord]
+			
+			// idf = wordIsInXDocs[uniWord]/howManyDocs
+			
+			tfIdf = Math.log(1+uniqueWordsInDoc[doc][uniWord])
+			      * Math.log(howManyDocs/wordIsInXDocs[uniWord]);
+			
+			if (tfIdf < .5)
+			{
+				console.log(uniqueWordsInDoc[doc][uniWord]);
+				console.log(howManyDocs);
+				console.log(wordIsInXDocs[uniWord]);
+				//stopWords.push(uniWord);
+				console.log(tfIdf);
+				console.log(uniWord);
+			}
+			
+
+			
+			// remove the stop words from the corpus!
+
+
+			
+		}
+	}
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var parseLine = function( line ) {
-  if (line == "") { return; }
-  var docID = documents.length;
+  if (line == "") { return; } // empty document
+  var docID = documents.length; // called each time documents increases in size?
   var docDate = "";
   var fields = line.split("\t");
   var text = fields[0];  // Assume there's just one field, the text
+  // required input format
   if (fields.length == 3) {  // If it's in [ID]\t[TAG]\t[TEXT] format...
     docID = fields[0];
     docDate = fields[1];
     text = fields[2];
   }
+  
+  // require for tf-idf
+  uniqueWordsInDoc[howManyDocs] = {};
+
 
   var tokens = [];
-  var rawTokens = text.toLowerCase().match(XRegExp("\\p{L}[\\p{L}\\p{P}]*\\p{L}", "g"));
-  if (rawTokens == null) { return; }
+  
+  // single line of text
+  //"\\p{L}[\\p{L}\\p{P}]*\\p{L}", "g"
+  var rawTokens = text.toLowerCase().match(XRegExp("\\p{L}[\\p{L}\\p{P}]*", "g"));
+  if (rawTokens == null) { return; } //empty document when non-text thrown away
+  
+  // initialising topicCounts array
   var topicCounts = new Array(numTopics);
   for (var topic = 0; topic < numTopics; topic++) { topicCounts[topic] = 0; }
 
   rawTokens.forEach(function (word) {
-    if (word !== "" && ! stopwords[word] && word.length > 2) {
-      var topic = Math.floor(Math.random() * numTopics);
+  //&& ! stopwords[word] && word.length > 2
+    if (word !== "" ) {
+      var topic = Math.floor(Math.random() * numTopics); // assign topic at random
       tokensPerTopic[topic]++;
+	  
+
+	  // new word not already in vocabulary
       if (! wordTopicCounts[word]) {
         wordTopicCounts[word] = {};
         vocabularySize++;
         vocabularyCounts[word] = 0;
+		
+		// create position for tf-idf
+		wordIsInXDocs[word] = 0;
+		
       }
+
+	  if (! uniqueWordsInDoc[howManyDocs][word])
+	  {
+		uniqueWordsInDoc[howManyDocs][word] = 1;
+		wordIsInXDocs[word]   += 1;
+	  }
+	  else
+	  {
+		uniqueWordsInDoc[howManyDocs][word] +=1;
+	  }
+	
+
+	  
+	  // create entry for 
       if (! wordTopicCounts[word][topic]) {
         wordTopicCounts[word][topic] = 0;
       }
+	  
       wordTopicCounts[word][topic] += 1;
-      vocabularyCounts[word] += 1;
-      topicCounts[topic] += 1;
+      vocabularyCounts[word] += 1; // why not ++?
+      topicCounts[topic] += 1; // why not ++?
+	  
       tokens.push({"word":word, "topic":topic });
+	  
     }
-  });
+	
 
+  });
+  howManyDocs +=1;	
   documents.push({ "originalOrder" : documents.length, "id" : docID, "date" : docDate, "originalText" : text, "tokens" : tokens, "topicCounts" : topicCounts});
+  
+  // add labels to d3js
   d3.select("div#docs-page").append("div")
      .attr("class", "document")
      .text("[" + docID + "] " + truncate(text));
 };
 
+// roulette wheel sampler
 var sampleDiscrete = function(weights, sum) {
   var sample = sum * Math.random();
   var i = 0;
   sample -= weights[i];
+  // inefficient implementation - could either do many samples at once/using a binary search
   while (sample > 0.0) {
     i++;
     sample -= weights[i];
@@ -264,18 +389,18 @@ var sampleDiscrete = function(weights, sum) {
   return i;
 }
 
-var sweep = function() {
-  documents.forEach( function( currentDoc, i ) {
+var sweep = function() { // single iteration
+  documents.forEach( function( currentDoc, i ) { // go through all documents
     var docTopicCounts = currentDoc.topicCounts;
-    for (var position = 0; position < currentDoc.tokens.length; position++) {
+    for (var position = 0; position < currentDoc.tokens.length; position++) { // go through all tokens in a document
       var token = currentDoc.tokens[position];
-      tokensPerTopic[ token.topic ]--;
+      tokensPerTopic[ token.topic ]--; // remove token from topic
       var currentWordTopicCounts = wordTopicCounts[ token.word ];
-      currentWordTopicCounts[ token.topic ]--;
-      docTopicCounts[ token.topic ]--;
+      currentWordTopicCounts[ token.topic ]--; // remove token from word-topic count
+      docTopicCounts[ token.topic ]--; // remove token from doc-topic counts
 
       var sum = 0;
-      for (var topic = 0; topic < numTopics; topic++) {
+      for (var topic = 0; topic < numTopics; topic++) { // create distribution for over all topics
         if (currentWordTopicCounts[ topic ]) {
           topicWeights[topic] =
             (documentTopicSmoothing + docTopicCounts[topic]) *
@@ -287,11 +412,12 @@ var sweep = function() {
             (documentTopicSmoothing + docTopicCounts[topic]) * topicWordSmoothing /
             (vocabularySize * topicWordSmoothing + tokensPerTopic[topic]);
         }
+		// topic weight[t] = doc-topic count[d,t] * word-topic count[w,t] / tokens-per-topic[t] {and smoothing factors}
         sum += topicWeights[topic];
       }
 
-      token.topic = sampleDiscrete(topicWeights, sum);
-      tokensPerTopic[ token.topic ]++;
+      token.topic = sampleDiscrete(topicWeights, sum); // sample and set new topic for token
+      tokensPerTopic[ token.topic ]++; 
       if (! currentWordTopicCounts[ token.topic ]) {
         currentWordTopicCounts[ token.topic ] = 1;
       }
@@ -302,7 +428,8 @@ var sweep = function() {
     }
   });
 
-  completeSweeps += 1;
+  // update d3js display of number of iterations
+  completeSweeps += 1; // why not ++?
   d3.select("#iters").text(completeSweeps);
   console.log("sweep " + completeSweeps);
 }
@@ -579,6 +706,8 @@ function ready(error, stops, lines) {
 
     // Load documents and populate the vocabulary
     lines.split("\n").forEach(parseLine);
+	
+	tfIdf();
 
     sortTopicWords();
     displayTopicWords();
