@@ -243,30 +243,46 @@ var tfIdf = function()
 	
 	for (var doc = 0; doc<howManyDocs; doc++)
 	{
-		for (var uniWord in uniqueWordsInDoc[doc])
+					// documents.tokens[doc]
+		for (var uniWordKey in documents[doc].tokens)
 		{
 			//
 			// freq = uniqueWordsInDoc[uniWord]
-			
+			var uniWord = documents[doc].tokens[uniWordKey].word;
 			// idf = wordIsInXDocs[uniWord]/howManyDocs
 			
 			tfIdf = Math.log(1+uniqueWordsInDoc[doc][uniWord])
 			      * Math.log(howManyDocs/wordIsInXDocs[uniWord]);
 			
-			if (tfIdf < .5)
+			if (tfIdf < .2)
 			{
-				console.log(uniqueWordsInDoc[doc][uniWord]);
-				console.log(howManyDocs);
-				console.log(wordIsInXDocs[uniWord]);
+// 				console.log(uniqueWordsInDoc[doc][uniWord]);
+	//			console.log(howManyDocs);
+		//		console.log(wordIsInXDocs[uniWord]);
 				//stopWords.push(uniWord);
-				console.log(tfIdf);
+			//	console.log(tfIdf); 
 				console.log(uniWord);
 			}
 			
 
 			
 			// remove the stop words from the corpus!
+			
+		
 
+			
+			// keep track of reduced vocabularySize???
+			
+				// if wordTopicCounts[word] empty
+			
+			
+			// documents.tokens
+			// documents.topicCounts
+			
+			// reducing tokensPerTopic
+			// wordTopicCounts
+			// vocabularyCounts
+			// topicCounts
 
 			
 		}
